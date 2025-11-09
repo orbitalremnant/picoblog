@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {{ settings.elements_top | safe }}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ settings.title }}</title>
+
+    <!-- SEO and Social Sharing Meta Tags -->
+    <meta name="description" content="{{ settings.description_text }}">
+    <meta property="og:title" content="{{ settings.title }}">
+    <meta property="og:description" content="{{ settings.description_text }}">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="{{ settings.title }}">
+    <meta name="twitter:description" content="{{ settings.description_text }}">
+
+    <!-- Favicon Links -->
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+    <script src="https://unpkg.com/lunr/lunr.min.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            line-height: 1.6;
+            margin: 0 auto;
+            max-width: 800px;
+            padding: 2em;
+            background: #fdfdfd;
+            color: #333;
+        }
+
+        header,
+        footer {
+            text-align: center;
+            margin-bottom: 2em;
+        }
+
+        .article {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 1em;
+            margin-bottom: 1em;
+        }
+
+        .article h2 a {
+            text-decoration: none;
+            color: #333;
+        }
+
+        .meta {
+            color: #888;
+            font-size: 0.9em;
+            margin-bottom: 1em;
+        }
+
+        .meta span {
+            margin-right: 0.5em;
+        }
+
+        .meta a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .meta a:hover,
+        .meta button:hover {
+            text-decoration: underline;
+        }
+
+        .meta button {
+            background: none;
+            border: none;
+            padding: 0;
+            margin: 0;
+            font-family: inherit;
+            font-size: inherit;
+            color: inherit;
+            cursor: pointer;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        #search-input {
+            width: 100%;
+            padding: 8px;
+            margin: 1em 0;
+        }
+
+        #search-results {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+        }
+
+        #search-results li {
+            margin-bottom: 1em;
+        }
+
+        .search-result-snippet {
+            font-size: 0.9em;
+            color: #555;
+            margin-left: 1em;
+        }
+
+        .search-result-snippet strong {
+            color: #000;
+        }
+
+        #buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 1em;
+        }
+
+        #buttons button,
+        .article button.tag-button {
+            background: #eee;
+            border: 1px solid #ddd;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        #buttons button:hover,
+        .article button.tag-button:hover {
+            border-color: #aaa;
+        }
+
+        #buttons button.active {
+            background-color: #a0c4ff;
+            color: #1f3b64;
+            border-color: #a0c4ff;
+            font-weight: bold;
+        }
+
+        .header-socials {
+            margin-top: 1em;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .header-socials a {
+            text-decoration: none;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .header-socials a:hover {
+            color: #000;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>{{ settings.title }}</h1>
+        <div class="description">
+            {{ settings.description_html | safe }}
+        </div>
+        <input type="text" id="search-input" placeholder="Search...">
+        <ul id="search-results"></ul>
+        <div id="buttons"></div>
+    </header>
+
+    <main id="articles-container">
+        {% for article in articles %}
+        <div class="article" id="{{ article.slug }}" data-tags='{{ article.tags | json_encode() }}'>
+            <h2><a href="#{{ article.slug }}">{{ article.title }}</a></h2>
+            <div class="meta">
+                {% if article.created %}<span>Published: {{ article.created | date(format="%b %e, %Y") }}</span>{% endif
+                %}
+                {% if article.modified and article.modified != article.created %}<span> Modified: {{ article.modified |
+                    date(format="%b %e, %Y") }}</span>{% endif %}
+                {% if article.tags and article.tags | length > 0 %}{% for tag in article.tags %}<span>#{{
+                    tag }}</span>{% endfor %}{% endif %}
+
+                <span>
+                    <button onclick="copyMarkdownToClipboard(this)" title="Copy Markdown"
+                        data-title="{{ article.title }}" data-description="{{ article.description }}"
+                        data-url="{{ article.link_url | default(value='') }}"
+                        data-tags="{{ article.tags | join(sep=',') }}" data-content="{{ article.content }}">
+                        ⧉
+                    </button>
+                </span>
+
+                {% if article.share_links and article.share_links | length > 0 %}
+                <span>↪</span>
+                {% for link in article.share_links %}
+                <span><a href="{{ link.url }}" target="_blank" rel="noopener noreferrer">{{ link.provider_name
+                        }}</a></span>
+                {% endfor %}
+                {% endif %}
+            </div>
+
+            <div class="content">
+                {{ article.html_content | safe }}
+            </div>
+        </div>
+        {% endfor %}
+    </main>
+
+    <footer>
+        <p>Generated with <a href="https://github.com/orbitalremnant/picoblog" target="_blank"
+                rel="noopener noreferrer">picoblog</a></p>
+    </footer>
+
+    {{ settings.elements_bottom | safe }}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const articles = Array.from(document.querySelectorAll('#articles-container .article'));
+            const buttonsContainer = document.getElementById('buttons');
+            const searchInput = document.getElementById('search-input');
+            const searchResults = document.getElementById('search-results');
+            const articlesContainer = document.getElementById('articles-container');
+            let lunrIndex;
+            let articleMap = {};
+            const minSearchChars = 3; // Minimum characters to trigger a search
+
+            function initializeTagFilters() {
+                const tagSet = new Set();
+                articles.forEach(article => { const articleTags = JSON.parse(article.dataset.tags || '[]'); articleTags.forEach(tag => tagSet.add(tag)); });
+                if (tagSet.size === 0) { buttonsContainer.style.display = 'none'; return; }
+                const sortedTags = Array.from(tagSet).sort();
+                const showAllBtn = document.createElement('button');
+                showAllBtn.textContent = 'Show All';
+                showAllBtn.classList.add('active');
+                buttonsContainer.appendChild(showAllBtn);
+                sortedTags.forEach(tag => { const btn = document.createElement('button'); btn.textContent = tag; btn.classList.add('tag-button'); buttonsContainer.appendChild(btn); });
+                buttonsContainer.addEventListener('click', (event) => {
+                    const clickedButton = event.target;
+                    if (clickedButton.tagName !== 'BUTTON') return;
+                    const currentActiveBtn = buttonsContainer.querySelector('.active');
+                    if (currentActiveBtn === clickedButton && clickedButton.textContent !== 'Show All') {
+                        currentActiveBtn.classList.remove('active');
+                        showAllBtn.classList.add('active');
+                        filterArticlesByTag('Show All');
+                    } else if (currentActiveBtn !== clickedButton) {
+                        if (currentActiveBtn) currentActiveBtn.classList.remove('active');
+                        clickedButton.classList.add('active');
+                        filterArticlesByTag(clickedButton.textContent);
+                    }
+                });
+            }
+
+            function filterArticlesByTag(selectedTag) {
+                articles.forEach(article => {
+                    if (selectedTag === 'Show All') { article.style.display = 'block'; }
+                    else { const articleTags = JSON.parse(article.dataset.tags || '[]'); article.style.display = articleTags.includes(selectedTag) ? 'block' : 'none'; }
+                });
+            }
+
+            async function initializeSearch() {
+                try {
+                    const response = await fetch('./search_index.json');
+                    if (!response.ok) throw new Error('Network response was not ok.');
+                    const articleData = await response.json();
+                    articleData.forEach(article => { articleMap[article.slug] = article; });
+                    lunrIndex = lunr(function () {
+                        this.ref('slug');
+                        this.field('title', { boost: 10 });
+                        this.field('description');
+                        this.field('tags', { boost: 5 });
+                        this.field('html_content');
+                        articleData.forEach(doc => this.add(doc));
+                    });
+                } catch (error) { console.error("Failed to initialize search:", error); searchInput.placeholder = "Search index failed to load."; searchInput.disabled = true; }
+            }
+
+            function buildFuzzyQuery(term) {
+                const terms = term.trim().split(/\s+/).filter(word => word.length > 0);
+                if (terms.length === 0) return '';
+
+                return terms.map((word, i) => {
+                    let fuzzyWord = word + '~1';
+                    if (i === terms.length - 1) {
+                        fuzzyWord = word + '*' + ' ' + fuzzyWord;
+                    }
+                    return fuzzyWord;
+                }).join(' ');
+            }
+
+            function createSnippet(content, term) {
+                const textContent = content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+                const termIndex = textContent.toLowerCase().indexOf(term.toLowerCase());
+                if (termIndex === -1) return (textContent.substring(0, 150) + '...').replace(/<|>/g, '');
+                const start = Math.max(0, termIndex - 50);
+                const end = Math.min(textContent.length, termIndex + term.length + 100);
+                let snippet = textContent.substring(start, end);
+                if (start > 0) snippet = '...' + snippet;
+                if (end < textContent.length) snippet = snippet + '...';
+                snippet = snippet.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                const highlightTerm = term.split(/\s+/).pop().replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+                return snippet.replace(new RegExp(`(${highlightTerm})`, 'gi'), '<strong>$1</strong>');
+            }
+
+            searchInput.addEventListener('keyup', () => {
+                if (!lunrIndex) return;
+                const term = searchInput.value.trim();
+
+                if (!term || term.length < minSearchChars) {
+                    articlesContainer.style.display = 'block';
+                    searchResults.style.display = 'none';
+                    searchResults.innerHTML = '';
+                    return;
+                }
+
+                try {
+                    const fuzzyQuery = buildFuzzyQuery(term);
+                    const results = lunrIndex.search(fuzzyQuery);
+
+                    articlesContainer.style.display = 'none';
+                    searchResults.style.display = 'block';
+
+                    if (results.length === 0) {
+                        searchResults.innerHTML = '<li>No results found.</li>';
+                    } else {
+                        searchResults.innerHTML = results.map(result => {
+                            const article = articleMap[result.ref];
+                            const snippet = createSnippet(article.html_content, term);
+                            return `<li><a href="#${article.slug}">${article.title}</a><div class="search-result-snippet">${snippet}</div></li>`;
+                        }).join('');
+                    }
+                } catch (e) {
+                    searchResults.innerHTML = '<li>Invalid search query.</li>';
+                }
+            });
+
+            searchResults.addEventListener('click', (e) => {
+                if (e.target.tagName === 'A') {
+                    searchInput.value = '';
+                    searchResults.innerHTML = '';
+                    searchResults.style.display = 'none';
+                    articlesContainer.style.display = 'block';
+                }
+            });
+
+            window.copyMarkdownToClipboard = function (element) {
+                const title = element.dataset.title;
+                const description = element.dataset.description;
+                const content = element.dataset.content;
+                const url = element.dataset.url;
+                const tags = element.dataset.tags ? element.dataset.tags.split(',') : [];
+
+                let markdownString = `# ${title}`;
+
+                if (description) {
+                    markdownString += `\n\n*${description}*`;
+                }
+
+                if (content) {
+                    markdownString += `\n\n${content}`;
+                }
+
+                if (url) {
+                    markdownString += `\n\n${url}`;
+                }
+
+                if (tags.length > 0) {
+                    const hashtags = tags.map(tag => `#${tag.trim().replace(/ /g, '')}`).join(' ');
+                    markdownString += `\n\n${hashtags}`;
+                }
+
+                navigator.clipboard.writeText(markdownString.trim()).then(() => {
+                    const originalText = element.innerHTML;
+                    element.innerHTML = 'Copied!';
+                    setTimeout(() => { element.innerHTML = originalText; }, 2000);
+                }).catch(err => { console.error('Failed to copy Markdown: ', err); alert('Failed to copy markdown.'); });
+            }
+
+            initializeTagFilters();
+            initializeSearch();
+        });
+    </script>
+</body>
+
+</html>

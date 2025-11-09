@@ -1,0 +1,31 @@
+[package]
+name = "picoblog"
+version = "0.0.0"
+edition = "2021"
+homepage = "https://github.com/orbitalremnant/picoblog"
+repository = "https://github.com/orbitalremnant/picoblog"
+authors = ["OrbitalRemnant <orbitalremnant@gmail.com>"]
+description = "A minimalistic static site generator written in Rust."
+license = "MIT"
+readme = "README.md"
+keywords = ["plot", "chart", "visualization", "cli", "data"]
+categories = ["command-line-utilities", "template-engine"]
+include = ["src/", "templates/", "Cargo.toml", "README.md", "LICENSE"]
+
+[dependencies]
+clap = { version = "4.5.51", features = ["derive"] }
+tera = "1.20.1"
+pulldown-cmark = "0.13.0"
+walkdir = "2.5.0"
+gray_matter = "0.3.2"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+anyhow = "1.0.100"
+regex = "1.12.2"
+url = "2.5.7"
+chrono = { version = "0.4.42", features = ["serde"] }
+html-escape = "0.2.13"
+urlencoding = "2.1.3"
+resvg = "0.45.1"
+ico = "0.4.0"
+once_cell = "1.21.3"
