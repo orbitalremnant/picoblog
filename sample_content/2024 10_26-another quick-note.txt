@@ -1,0 +1,8 @@
+This is a plain text file.
+There is no frontmatter here.
+
+The title "quick note" and the date are taken from the filename.
+Line breaks should be preserved.
+This is a simple way to add quick, unformatted updates to your blog.
+
+#text #txt

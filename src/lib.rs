@@ -17,8 +17,9 @@ use walkdir::WalkDir;
 // --- Statically Compiled Regexes ---
 static RE_FIRST_URL: Lazy<Regex> = Lazy::new(|| Regex::new(r"https?://[^\s()<>]+").unwrap());
 static RE_BODY_TAGS: Lazy<Regex> = Lazy::new(|| Regex::new(r"#(\p{L}[\p{L}\p{N}-]*)").unwrap());
-static RE_FILENAME_DATE: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"^(\d{4}-\d{2}-\d{2})-(.+)").unwrap());
+static RE_FILENAME_DATE: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"^(\d{4})[^[:alnum:]](\d{2})[^[:alnum:]](\d{2})[^[:alnum:]](.+)").unwrap()
+});
 static RE_HTML_RESOURCES: Lazy<Regex> =
     Lazy::new(|| Regex::new(r#"(?:src|href)=["'](.*?)["']"#).unwrap());
 
@@ -90,10 +91,13 @@ fn system_time_to_naive_date(st: SystemTime) -> NaiveDate {
 fn extract_metadata_from_path(path: &Path) -> (String, Option<NaiveDate>) {
     let file_stem = path.file_stem().unwrap().to_string_lossy();
     let (date_opt, title_slug) = if let Some(caps) = RE_FILENAME_DATE.captures(&file_stem) {
-        let date_str = caps.get(1).unwrap().as_str();
-        let title_part = caps.get(2).unwrap().as_str();
+        let year = caps.get(1).unwrap().as_str();
+        let month = caps.get(2).unwrap().as_str();
+        let day = caps.get(3).unwrap().as_str();
+        let date_str = format!("{}-{}-{}", year, month, day);
+        let title_part = caps.get(4).unwrap().as_str();
         (
-            NaiveDate::parse_from_str(date_str, "%Y-%m-%d").ok(),
+            NaiveDate::parse_from_str(&date_str, "%Y-%m-%d").ok(),
             title_part.to_string(),
         )
     } else {
