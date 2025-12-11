@@ -24,7 +24,7 @@ struct Cli {
     description: String,
 
     /// Define a share provider. Format: "PROVIDER:URL_TEMPLATE".
-    /// Placeholders: {URL}, {TITLE}, {TEXT}.
+    /// Placeholders: {URL}, {TITLE}, {TEXT}, {TAGS}.
     /// Example: --share "X:https://twitter.com/intent/tweet?url={URL}&text={TITLE}"
     #[arg(long, value_name = "PROVIDER:TEMPLATE")]
     share: Vec<String>,

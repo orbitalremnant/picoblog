@@ -133,11 +133,20 @@ fn generate_share_links(
     url: &Option<String>,
     title: &str,
     text: &str,
+    tags: &[String],
 ) -> Vec<ShareLink> {
     let url_to_encode = url.as_deref().unwrap_or("");
     let url_encoded = urlencoding::encode(url_to_encode);
     let title_encoded = urlencoding::encode(title);
     let text_encoded = urlencoding::encode(text);
+
+    // Format tags as "#tag1 #tag2"
+    let tags_string = tags
+        .iter()
+        .map(|t| format!("#{}", t))
+        .collect::<Vec<_>>()
+        .join(" ");
+    let tags_encoded = urlencoding::encode(&tags_string);
 
     providers
         .iter()
@@ -145,7 +154,8 @@ fn generate_share_links(
             let final_url = template
                 .replace("{URL}", &url_encoded)
                 .replace("{TITLE}", &title_encoded)
-                .replace("{TEXT}", &text_encoded);
+                .replace("{TEXT}", &text_encoded)
+                .replace("{TAGS}", &tags_encoded);
 
             ShareLink {
                 provider_name: provider_name.clone(),
@@ -182,7 +192,8 @@ fn parse_text_file(path: &Path, share_providers: &[(String, String)]) -> Result<
 
     let link_url = extract_first_url(&content);
     let tags = extract_body_tags(&content);
-    let share_links = generate_share_links(share_providers, &link_url, &path_title, &content);
+    let share_links =
+        generate_share_links(share_providers, &link_url, &path_title, &content, &tags);
 
     Ok(Article {
         title: path_title,
@@ -251,7 +262,8 @@ fn parse_markdown_file(path: &Path, share_providers: &[(String, String)]) -> Res
     validate_resource_urls(&html_content, path)?;
 
     let slug = path.file_stem().unwrap().to_string_lossy().to_string();
-    let share_links = generate_share_links(share_providers, &link_url, &title, &markdown_content);
+    let share_links =
+        generate_share_links(share_providers, &link_url, &title, &markdown_content, &tags);
 
     Ok(Article {
         title,
