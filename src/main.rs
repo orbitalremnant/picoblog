@@ -8,8 +8,34 @@ use tera::Context as TeraContext;
 // Import logic from our library
 use picoblog::{find_and_parse_articles, generate_site};
 
+const LONG_ABOUT: &str = r#"
+picoblog: A minimalistic, single-binary static site generator.
+
+OVERVIEW:
+  Scans directories for Markdown (.md) and plain text (.txt) files, parses them,
+  and generates a high-performance, single-page static website. The output includes
+  client-side full-text search, tag filtering, and auto-generated favicons.
+
+FILE PROCESSING:
+  - Markdown (.md): Supports YAML frontmatter for metadata (title, tags, etc.).
+    If no frontmatter is present, it attempts to extract date and title from the
+    filename (e.g., "2024-10-01-My-Post.md").
+  - Text (.txt): Treated as simple posts. Metadata is extracted from the filename.
+    Content is HTML-escaped and line breaks are preserved.
+
+SHARE PROVIDER VARIABLES:
+  When defining share links via the `--share` argument, you can use the following
+  variables in your URL templates. They will be URL-encoded automatically.
+
+  - {URL}   : The absolute, anchor-based link to the specific post.
+  - {TITLE} : The title of the post.
+  - {TEXT}  : The raw text content of the post.
+  - {TAGS}  : A space-separated list of hashtags .
+              Spaces within a single tag are replaced with underscores
+"#;
+
 #[derive(Parser, Debug)]
-#[command(version, about = "picoblog: a lite static site generator")]
+#[command(version, about = "picoblog: a lite static site generator", long_about = LONG_ABOUT)]
 struct Cli {
     /// One or more source directories containing content files.
     #[arg(short, long, required = false, default_value = "sample_content")]
@@ -24,8 +50,7 @@ struct Cli {
     description: String,
 
     /// Define a share provider. Format: "PROVIDER:URL_TEMPLATE".
-    /// Placeholders: {URL}, {TITLE}, {TEXT}, {TAGS}.
-    /// Example: --share "X:https://twitter.com/intent/tweet?url={URL}&text={TITLE}"
+    /// See --help for available variables ({URL}, {TAGS}, etc).
     #[arg(long, value_name = "PROVIDER:TEMPLATE")]
     share: Vec<String>,
 

@@ -1,4 +1,4 @@
-cargo run -- -help
+cargo run -- --help
 
 Remove-Item -Recurse -Force "public"
 

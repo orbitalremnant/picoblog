@@ -60,8 +60,6 @@ Line breaks are preserved.
 #text #notes
 ```
 
-Of course. Here is the elaborated section on the share syntax for the README.
-
 ---
 
 ## Social Sharing Links

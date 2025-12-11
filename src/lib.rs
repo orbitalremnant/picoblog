@@ -140,10 +140,11 @@ fn generate_share_links(
     let title_encoded = urlencoding::encode(title);
     let text_encoded = urlencoding::encode(text);
 
-    // Format tags as "#tag1 #tag2"
+    // Format tags as "#tag1 #tag2".
+    // Spaces inside a specific tag are replaced with underscores (e.g. "my tag" -> "#my_tag").
     let tags_string = tags
         .iter()
-        .map(|t| format!("#{}", t))
+        .map(|t| format!("#{}", t.replace(' ', "_")))
         .collect::<Vec<_>>()
         .join(" ");
     let tags_encoded = urlencoding::encode(&tags_string);
